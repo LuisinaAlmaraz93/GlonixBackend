@@ -53,6 +53,17 @@ app.post("/paypal/webhook", async (req, res) => {
     res.sendStatus(200); // Confirmar recepción
 });
 
+// ✅ NUEVA RUTA PARA VER LAS SUSCRIPCIONES DESDE EL NAVEGADOR
+app.get("/ver-suscripciones", async (req, res) => {
+    try {
+        const result = await pool.query("SELECT * FROM subscriptions");
+        res.json(result.rows); // Muestra los datos en JSON
+    } catch (error) {
+        console.error("❌ Error consultando suscripciones:", error);
+        res.status(500).send("Error consultando la base de datos");
+    }
+});
+
 // Iniciar el servidor en el puerto 8080 (Render usa este puerto)
 const PORT = process.env.PORT || 8080;
 app.listen(PORT, "0.0.0.0", () => {
