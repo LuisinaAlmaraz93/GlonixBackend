@@ -1,6 +1,8 @@
 const express = require("express");
 const bodyParser = require("body-parser");
 const pool = require("./db"); // Conexión a la base de datos
+const jwt = require("jsonwebtoken"); // Importamos jsonwebtoken para los tokens
+const SECRET_KEY = "mi_secreto_super_seguro"; // 🔥 Cambia esto por una clave segura
 
 const app = express();
 app.use(bodyParser.json());
@@ -28,11 +30,10 @@ async function createTable() {
 
 createTable();
 
-// Ruta para el webhook de PayPal
+// ✅ **Ruta para el webhook de PayPal**
 app.post("/paypal/webhook", async (req, res) => {
     console.log("⚡ Webhook recibido:", req.body);
 
-    // Verificar el evento de PayPal
     const eventType = req.body.event_type;
 
     if (eventType === "BILLING.SUBSCRIPTION.ACTIVATED") {
@@ -51,6 +52,50 @@ app.post("/paypal/webhook", async (req, res) => {
     }
 
     res.sendStatus(200); // Confirmar recepción
+});
+
+// ✅ **Ruta para generar el token JWT**
+app.post("/login", async (req, res) => {
+    const { email } = req.body; // Recibe el email desde el frontend
+
+    try {
+        // Verificar si el email existe en la base de datos
+        const result = await pool.query("SELECT * FROM subscriptions WHERE subscriber_email = $1", [email]);
+
+        if (result.rows.length === 0) {
+            return res.status(401).json({ message: "Acceso denegado: No estás suscripto." });
+        }
+
+        // 🔹 Si el email existe, creamos el token JWT
+        const token = jwt.sign({ email }, SECRET_KEY, { expiresIn: "1h" });
+
+        res.json({ token }); // Enviamos el token al usuario
+    } catch (error) {
+        console.error("❌ Error en el login:", error);
+        res.status(500).json({ message: "Error en el servidor" });
+    }
+});
+
+// ✅ **Middleware para verificar token**
+const verificarToken = (req, res, next) => {
+    const token = req.headers.authorization?.split(" ")[1];
+
+    if (!token) {
+        return res.status(403).json({ message: "Acceso denegado: No tienes token." });
+    }
+
+    try {
+        const decoded = jwt.verify(token, SECRET_KEY); // Verificamos el token
+        req.user = decoded; // Guardamos la info del usuario en la petición
+        next(); // 🔹 Si el token es válido, dejamos continuar la petición
+    } catch (error) {
+        return res.status(401).json({ message: "Token inválido o expirado." });
+    }
+};
+
+// ✅ **Ruta protegida para `Members.html`**
+app.get("/members", verificarToken, (req, res) => {
+    res.sendFile(__dirname + "/Members.html"); // Envía el archivo Members.html si el token es válido
 });
 
 // ✅ NUEVA RUTA PARA VER LAS SUSCRIPCIONES DESDE EL NAVEGADOR
