@@ -64,6 +64,15 @@ app.get("/ver-suscripciones", async (req, res) => {
     }
 });
 
+// 📌 Diagnóstico: Ver todas las rutas registradas en Express
+app._router.stack.forEach((r) => {
+    if (r.route && r.route.path) {
+        console.log(`🛠 Ruta registrada: ${r.route.path}`);
+    }
+});
+
+
+
 // Iniciar el servidor en el puerto 8080 (Render usa este puerto)
 const PORT = process.env.PORT || 8080;
 app.listen(PORT, "0.0.0.0", () => {
