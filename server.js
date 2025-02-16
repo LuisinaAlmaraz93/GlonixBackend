@@ -267,8 +267,6 @@ app.post("/forgot-password", async (req, res) => {
 });
 
 
-const SECRET_KEY = "mi_secreto_super_seguro"; // Cambia por una clave segura
-
 // Ruta para cambiar la contraseña
 app.post("/change-password", async (req, res) => {
   const { currentPassword, newPassword } = req.body;
