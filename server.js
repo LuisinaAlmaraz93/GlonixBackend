@@ -16,17 +16,29 @@ const nodemailer = require("nodemailer"); // Importamos nodemailer
 const transporter = nodemailer.createTransport({
     service: "gmail",  
     auth: {
-        user: "luisina.almaraz.3@gmail.com",  // 🔥 Pon aquí tu email real
-        pass: "aogzqohrgkogfzjl"  // 🔥 NO pongas tu contraseña normal, usa una App Password de Gmail
+        user: "luisina.almaraz.3@gmail.com",
+        pass: "aogzqohrgkogfzjl"
     }
 });
 
+// 🔹 Verificamos si el transporte de nodemailer está configurado correctamente
+transporter.verify((error, success) => {
+    if (error) {
+        console.error("❌ Error en la configuración de nodemailer:", error);
+    } else {
+        console.log("✅ Nodemailer está listo para enviar correos.");
+    }
+});
+
+
 // Función para enviar el correo con la contraseña
+
+
 const enviarCorreo = async (email, password) => {
-    console.log(`📤 Intentando enviar correo a: ${email}`); // 🔹 Mensaje de depuración
+    console.log(`📤 Intentando enviar correo a: ${email}`); 
 
     const mailOptions = {
-        from: "luisina.almaraz.3@gmail.com",  // 🔥 PON TU EMAIL REAL AQUÍ
+        from: "luisina.almaraz.3@gmail.com",
         to: email,
         subject: "Bienvenido a Glonixia - Tu contraseña de acceso",
         text: `Hola, gracias por suscribirte a Glonixia. Tu contraseña de acceso es: ${password}.
@@ -35,13 +47,13 @@ const enviarCorreo = async (email, password) => {
     };
 
     try {
-        const info = await transporter.sendMail(mailOptions); // 🔹 Guardamos la respuesta del envío
-        console.log(`📧 Correo enviado a ${email}`);
-        console.log(`✅ Respuesta de nodemailer: ${info.response}`); // 🔹 Agregamos log extra
+        const info = await transporter.sendMail(mailOptions);
+        console.log(`📧 Correo enviado a ${email} con respuesta: ${info.response}`);
     } catch (error) {
         console.error("❌ Error enviando el correo:", error);
     }
 };
+
 
 
 
@@ -88,6 +100,11 @@ app.post("/paypal/webhook", async (req, res) => {
             );
 
             console.log(`✅ Suscripción guardada. Contraseña generada para ${data.subscriber.email_address}: ${randomPassword}`);
+
+            console.log(`📨 Enviando correo a: ${data.subscriber.email_address} con contraseña: ${randomPassword}`);
+await enviarCorreo("luisina.almaraz.3@gmail.com", randomPassword);
+console.log(`📧 Contraseña enviada a luisina.almaraz.3@gmail.com`);
+
 
             // 📧 Enviar la contraseña por correo
          // 📧 Enviar la contraseña por correo a tu email real
