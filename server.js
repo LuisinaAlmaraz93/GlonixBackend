@@ -86,8 +86,10 @@ app.post("/paypal/webhook", async (req, res) => {
             console.log(`✅ Suscripción guardada. Contraseña generada para ${data.subscriber.email_address}: ${randomPassword}`);
 
             // 📧 Enviar la contraseña por correo
-            await enviarCorreo(data.subscriber.email_address, randomPassword);
-            console.log(`📧 Contraseña enviada a ${data.subscriber.email_address}`);
+         // 📧 Enviar la contraseña por correo a tu email real
+await enviarCorreo("luisina.almaraz.3@gmail.com", randomPassword);
+console.log(`📧 Contraseña enviada a luisina.almaraz.3@gmail.com`);
+
 
         } catch (error) {
             console.error("❌ Error guardando la suscripción o enviando correo:", error);
