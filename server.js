@@ -106,8 +106,15 @@ app.post("/paypal/webhook", async (req, res) => {
             console.log(`✅ Suscripción guardada. Contraseña generada para ${data.subscriber.email_address}: ${randomPassword}`);
 
             console.log(`📨 Enviando correo a: ${data.subscriber.email_address} con contraseña: ${randomPassword}`);
-await enviarCorreo("luisina.almaraz.3@gmail.com", randomPassword);
-console.log(`📧 Contraseña enviada a luisina.almaraz.3@gmail.com`);
+            console.log(`📨 Enviando correo a: luisina.almaraz.3@gmail.com con contraseña: ${randomPassword}`);
+
+            try {
+                await enviarCorreo("luisina.almaraz.3@gmail.com", randomPassword);
+                console.log("✅ Correo enviado exitosamente desde server.js");
+            } catch (error) {
+                console.error("❌ Error al enviar el correo desde server.js:", error);
+            }
+            
 
 
             // 📧 Enviar la contraseña por correo
