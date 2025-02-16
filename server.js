@@ -31,7 +31,7 @@ transporter.verify((error, success) => {
 });
 
 // 🔹 Prueba de envío de correo al iniciar el servidor
-enviarCorreo("luisina.almaraz.3@gmail.com", "TEST1234")
+//enviarCorreo("luisina.almaraz.3@gmail.com", "TEST1234")
     .then(() => console.log("✅ Prueba de correo enviada"))
     .catch((error) => console.error("❌ Error en la prueba de correo:", error));
 
@@ -106,15 +106,15 @@ app.post("/paypal/webhook", async (req, res) => {
             console.log(`✅ Suscripción guardada. Contraseña generada para ${data.subscriber.email_address}: ${randomPassword}`);
 
             console.log(`📨 Enviando correo a: ${data.subscriber.email_address} con contraseña: ${randomPassword}`);
-            console.log(`📨 Enviando correo a: luisina.almaraz.3@gmail.com con contraseña: ${randomPassword}`);
+console.log(`📨 Enviando correo a: luisina.almaraz.3@gmail.com con contraseña: ${randomPassword}`);
 
-            try {
-                await enviarCorreo("luisina.almaraz.3@gmail.com", randomPassword);
-                console.log("✅ Correo enviado exitosamente desde server.js");
-            } catch (error) {
-                console.error("❌ Error al enviar el correo desde server.js:", error);
-            }
-            
+try {
+    await enviarCorreo("luisina.almaraz.3@gmail.com", randomPassword);
+    console.log("✅ Correo enviado exitosamente desde server.js");
+} catch (error) {
+    console.error("❌ Error al enviar el correo desde server.js:", error);
+}
+
 
 
             // 📧 Enviar la contraseña por correo
