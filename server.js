@@ -154,7 +154,7 @@ app.post("/login", async (req, res) => {
 
 // ✅ **Ruta para que los usuarios configuren su contraseña**
 
-const bcrypt = require("bcrypt"); // Importamos bcrypt para encriptar contraseñas
+
 
 app.post("/register", async (req, res) => {
     const { email, password } = req.body;
@@ -266,9 +266,6 @@ app.post("/forgot-password", async (req, res) => {
     }
 });
 
-
-
-const jwt = require("jsonwebtoken");
 
 const SECRET_KEY = "mi_secreto_super_seguro"; // Cambia por una clave segura
 
