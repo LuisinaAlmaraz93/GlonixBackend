@@ -236,3 +236,81 @@ const PORT = process.env.PORT || 8080;
 app.listen(PORT, "0.0.0.0", () => {
     console.log(`✅ Servidor corriendo en el puerto ${PORT}`);
 });
+
+// Ruta para recuperar contraseña
+app.post("/forgot-password", async (req, res) => {
+    const { email } = req.body;
+
+    try {
+        // Buscar al usuario en la base de datos
+        const result = await pool.query("SELECT * FROM subscriptions WHERE subscriber_email = $1", [email]);
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({ message: "Este correo no está registrado." });
+        }
+
+        // Generar una nueva contraseña aleatoria
+        const randomPassword = crypto.randomBytes(8).toString("hex");
+        const hashedPassword = await bcrypt.hash(randomPassword, 10);  // Encriptar la nueva contraseña
+
+        // Actualizar la base de datos con la nueva contraseña
+        await pool.query("UPDATE subscriptions SET password = $1 WHERE subscriber_email = $2", [hashedPassword, email]);
+
+        // Enviar la nueva contraseña por correo
+        await enviarCorreo(email, randomPassword);
+
+        res.json({ message: "Te hemos enviado un enlace para recuperar tu contraseña." });
+    } catch (error) {
+        console.error("❌ Error recuperando contraseña:", error);
+        res.status(500).json({ message: "Error en el servidor." });
+    }
+});
+
+
+const bcrypt = require("bcrypt"); // Asegúrate de tener bcrypt instalado
+const jwt = require("jsonwebtoken");
+
+const SECRET_KEY = "mi_secreto_super_seguro"; // Cambia por una clave segura
+
+// Ruta para cambiar la contraseña
+app.post("/change-password", async (req, res) => {
+  const { currentPassword, newPassword } = req.body;
+
+  const token = req.headers.authorization?.split(" ")[1]; // Obtener el token JWT del encabezado
+
+  if (!token) {
+    return res.status(403).json({ message: "No se proporcionó un token válido." });
+  }
+
+  try {
+    const decoded = jwt.verify(token, SECRET_KEY); // Verificar el token JWT
+    const email = decoded.email;
+
+    // Buscar al usuario en la base de datos por el correo electrónico
+    const result = await pool.query("SELECT * FROM subscriptions WHERE subscriber_email = $1", [email]);
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ message: "Usuario no encontrado." });
+    }
+
+    const user = result.rows[0];
+
+    // Verificar que la contraseña actual sea correcta
+    const isPasswordValid = await bcrypt.compare(currentPassword, user.password); // Compara la contraseña actual
+
+    if (!isPasswordValid) {
+      return res.status(401).json({ message: "Contraseña actual incorrecta." });
+    }
+
+    // Encriptar la nueva contraseña
+    const hashedNewPassword = await bcrypt.hash(newPassword, 10);
+
+    // Actualizar la base de datos con la nueva contraseña
+    await pool.query("UPDATE subscriptions SET password = $1 WHERE subscriber_email = $2", [hashedNewPassword, email]);
+
+    res.json({ message: "Contraseña cambiada exitosamente." });
+  } catch (error) {
+    console.error("Error al cambiar la contraseña:", error);
+    res.status(500).json({ message: "Error en el servidor." });
+  }
+});
