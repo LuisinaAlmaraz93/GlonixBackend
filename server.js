@@ -14,10 +14,10 @@ const nodemailer = require("nodemailer"); // Importamos nodemailer
 
 // Configurar transporte de correo
 const transporter = nodemailer.createTransport({
-    service: "gmail",  // 🔹 Puedes cambiarlo si usas otro proveedor (ej: Outlook, Yahoo)
+    service: "gmail",  
     auth: {
-        user: "tuemail@gmail.com",  // 🔥 PON AQUÍ TU EMAIL
-        pass: "tucontraseña"  // 🔥 PON AQUÍ TU CONTRASEÑA O APP PASSWORD
+        user: "luisina.almaraz.3@gmail.com",  // 🔥 Pon aquí tu email real
+        pass: "aogzqohrgkogfzjl"  // 🔥 NO pongas tu contraseña normal, usa una App Password de Gmail
     }
 });
 
