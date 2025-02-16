@@ -267,7 +267,7 @@ app.post("/forgot-password", async (req, res) => {
 });
 
 
-const bcrypt = require("bcrypt"); // Asegúrate de tener bcrypt instalado
+
 const jwt = require("jsonwebtoken");
 
 const SECRET_KEY = "mi_secreto_super_seguro"; // Cambia por una clave segura
@@ -319,7 +319,7 @@ if (result.rowCount === 0) {
 
 console.log(`✅ Contraseña actualizada en la BD para: ${email}`);
 res.json({ message: "Contraseña cambiada exitosamente."
-    
+
  });
 
 
