@@ -302,15 +302,24 @@ app.post("/change-password", async (req, res) => {
       return res.status(401).json({ message: "Contraseña actual incorrecta." });
     }
 
-    // Encriptar la nueva contraseña
-    const hashedNewPassword = await bcrypt.hash(newPassword, 10);
+   // Encriptar la nueva contraseña
+const hashedNewPassword = await bcrypt.hash(newPassword, 10);
 
-    // Actualizar la base de datos con la nueva contraseña
-    await pool.query("UPDATE subscriptions SET password = $1 WHERE subscriber_email = $2", [hashedNewPassword, email]);
+// Actualizar la base de datos con la nueva contraseña
+const result = await pool.query(
+    "UPDATE subscriptions SET password = $1 WHERE subscriber_email = $2 RETURNING *", 
+    [hashedNewPassword, email]
+);
 
-    res.json({ message: "Contraseña cambiada exitosamente." });
-  } catch (error) {
-    console.error("Error al cambiar la contraseña:", error);
-    res.status(500).json({ message: "Error en el servidor." });
-  }
-});
+// 🔹 Verifica si la contraseña se actualizó correctamente
+if (result.rowCount === 0) {
+    console.error("❌ ERROR: No se pudo actualizar la contraseña.");
+    return res.status(500).json({ message: "No se pudo actualizar la contraseña." });
+}
+
+console.log(`✅ Contraseña actualizada en la BD para: ${email}`);
+res.json({ message: "Contraseña cambiada exitosamente."
+    
+ });
+
+
