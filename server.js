@@ -23,8 +23,10 @@ const transporter = nodemailer.createTransport({
 
 // Función para enviar el correo con la contraseña
 const enviarCorreo = async (email, password) => {
+    console.log(`📤 Intentando enviar correo a: ${email}`); // 🔹 Mensaje de depuración
+
     const mailOptions = {
-        from: "tuemail@gmail.com",
+        from: "luisina.almaraz.3@gmail.com",  // 🔥 PON TU EMAIL REAL AQUÍ
         to: email,
         subject: "Bienvenido a Glonixia - Tu contraseña de acceso",
         text: `Hola, gracias por suscribirte a Glonixia. Tu contraseña de acceso es: ${password}.
@@ -33,12 +35,14 @@ const enviarCorreo = async (email, password) => {
     };
 
     try {
-        await transporter.sendMail(mailOptions);
+        const info = await transporter.sendMail(mailOptions); // 🔹 Guardamos la respuesta del envío
         console.log(`📧 Correo enviado a ${email}`);
+        console.log(`✅ Respuesta de nodemailer: ${info.response}`); // 🔹 Agregamos log extra
     } catch (error) {
         console.error("❌ Error enviando el correo:", error);
     }
 };
+
 
 
 // Ruta de prueba para verificar que el servidor funciona
