@@ -30,10 +30,7 @@ transporter.verify((error, success) => {
     }
 });
 
-// 🔹 Prueba de envío de correo al iniciar el servidor
-//enviarCorreo("luisina.almaraz.3@gmail.com", "TEST1234")
-    .then(() => console.log("✅ Prueba de correo enviada"))
-    .catch((error) => console.error("❌ Error en la prueba de correo:", error));
+
 
 // Función para enviar el correo con la contraseña
 
@@ -221,6 +218,17 @@ app._router.stack.forEach((r) => {
     }
 });
 
+// 🔹 Prueba de envío de correo al iniciar el servidor
+async function testEmail() {
+    try {
+        await enviarCorreo("luisina.almaraz.3@gmail.com", "TEST1234");
+        console.log("✅ Prueba de correo enviada");
+    } catch (error) {
+        console.error("❌ Error en la prueba de correo:", error);
+    }
+}
+
+testEmail(); // 🔹 Llamamos la función al iniciar el servidor
 
 
 // Iniciar el servidor en el puerto 8080 (Render usa este puerto)
