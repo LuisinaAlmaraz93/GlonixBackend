@@ -3,6 +3,7 @@ const bodyParser = require("body-parser");
 const pool = require("./db"); // Conexión a la base de datos
 const jwt = require("jsonwebtoken"); // Importamos jsonwebtoken para los tokens
 const SECRET_KEY = "mi_secreto_super_seguro"; // 🔥 Cambia esto por una clave segura
+const bcrypt = require("bcrypt");
 
 const app = express();
 app.use(bodyParser.json());
@@ -136,7 +137,7 @@ app.post("/login", async (req, res) => {
 
     try {
         // Verificar si el email existe en la base de datos
-        const result = await pool.query("SELECT * FROM subscriptions WHERE subscriber_email = $1", [email]);
+        let result = await pool.query("SELECT * FROM subscriptions WHERE subscriber_email = $1", [email]);
 
         if (result.rows.length === 0) {
             return res.status(401).json({ message: "Acceso denegado: No estás suscripto." });
@@ -162,7 +163,7 @@ app.post("/register", async (req, res) => {
     try {
         const hashedPassword = await bcrypt.hash(password, 10); // 🔹 Encriptamos la contraseña
 
-        const result = await pool.query(
+        let result = await pool.query(
             "UPDATE subscriptions SET password = $1 WHERE subscriber_email = $2 RETURNING *",
             [hashedPassword, email]
         );
@@ -269,42 +270,45 @@ app.post("/forgot-password", async (req, res) => {
 
 // Ruta para cambiar la contraseña
 app.post("/change-password", async (req, res) => {
-  const { currentPassword, newPassword } = req.body;
+    const { newPassword } = req.body;
+    const token = req.headers.authorization?.split(" ")[1];
 
-  const token = req.headers.authorization?.split(" ")[1]; // Obtener el token JWT del encabezado
-
-  if (!token) {
-    return res.status(403).json({ message: "No se proporcionó un token válido." });
-  }
-
-  try {
-    const decoded = jwt.verify(token, SECRET_KEY); // Verificar el token JWT
-    const email = decoded.email;
-
-    // Buscar al usuario en la base de datos por el correo electrónico
-    const result = await pool.query("SELECT * FROM subscriptions WHERE subscriber_email = $1", [email]);
-
-    if (result.rows.length === 0) {
-      return res.status(404).json({ message: "Usuario no encontrado." });
+    if (!token) {
+        return res.status(403).json({ message: "No tienes permiso para cambiar la contraseña." });
     }
 
-    const user = result.rows[0];
+    try {
+        const decoded = jwt.verify(token, SECRET_KEY);
+        const email = decoded.email;
 
-    // Verificar que la contraseña actual sea correcta
-    const isPasswordValid = await bcrypt.compare(currentPassword, user.password); // Compara la contraseña actual
+        // Verificar si el usuario ya cambió la contraseña antes
+        let userCheck = await pool.query("SELECT password FROM subscriptions WHERE subscriber_email = $1", [email]);
 
-    if (!isPasswordValid) {
-      return res.status(401).json({ message: "Contraseña actual incorrecta." });
+        if (userCheck.rows.length === 0) {
+            return res.status(404).json({ message: "Usuario no encontrado." });
+        }
+
+        const currentPassword = userCheck.rows[0].password;
+
+        // Si el usuario ya cambió la contraseña antes (es decir, la contraseña está encriptada)
+        if (currentPassword.startsWith("$2b$")) { 
+            return res.status(403).json({ message: "Ya cambiaste tu contraseña antes." });
+        }
+
+        // Encriptar la nueva contraseña
+        const hashedNewPassword = await bcrypt.hash(newPassword, 10);
+
+        // Actualizar la base de datos
+        await pool.query("UPDATE subscriptions SET password = $1 WHERE subscriber_email = $2", [hashedNewPassword, email]);
+
+        res.json({ message: "Contraseña cambiada exitosamente. Inicia sesión con tu nueva contraseña." });
+
+    } catch (error) {
+        console.error("Error al cambiar la contraseña:", error);
+        res.status(500).json({ message: "Error en el servidor." });
     }
+});
 
-   // Encriptar la nueva contraseña
-const hashedNewPassword = await bcrypt.hash(newPassword, 10);
-
-// Actualizar la base de datos con la nueva contraseña
-const result = await pool.query(
-    "UPDATE subscriptions SET password = $1 WHERE subscriber_email = $2 RETURNING *", 
-    [hashedNewPassword, email]
-);
 
 // 🔹 Verifica si la contraseña se actualizó correctamente
 if (result.rowCount === 0) {
@@ -316,5 +320,3 @@ console.log(`✅ Contraseña actualizada en la BD para: ${email}`);
 res.json({ message: "Contraseña cambiada exitosamente."
 
  });
-
-
