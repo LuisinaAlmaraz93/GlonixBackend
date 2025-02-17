@@ -270,11 +270,16 @@ app.post("/forgot-password", async (req, res) => {
 
 // Ruta para cambiar la contraseña
 app.post("/change-password", async (req, res) => {
-    const { newPassword } = req.body;
+    const { newPassword, confirmPassword } = req.body;
     const token = req.headers.authorization?.split(" ")[1];
 
     if (!token) {
         return res.status(403).json({ message: "No tienes permiso para cambiar la contraseña." });
+    }
+
+    // Validar que las contraseñas coincidan
+    if (newPassword !== confirmPassword) {
+        return res.status(400).json({ message: "Las contraseñas no coinciden." });
     }
 
     try {
@@ -282,7 +287,7 @@ app.post("/change-password", async (req, res) => {
         const email = decoded.email;
 
         // Verificar si el usuario ya cambió la contraseña antes
-        let userCheck = await pool.query("SELECT password FROM subscriptions WHERE subscriber_email = $1", [email]);
+        const userCheck = await pool.query("SELECT password FROM subscriptions WHERE subscriber_email = $1", [email]);
 
         if (userCheck.rows.length === 0) {
             return res.status(404).json({ message: "Usuario no encontrado." });
@@ -299,24 +304,21 @@ app.post("/change-password", async (req, res) => {
         const hashedNewPassword = await bcrypt.hash(newPassword, 10);
 
         // Actualizar la base de datos
-        await pool.query("UPDATE subscriptions SET password = $1 WHERE subscriber_email = $2", [hashedNewPassword, email]);
+        const result = await pool.query(
+            "UPDATE subscriptions SET password = $1 WHERE subscriber_email = $2 RETURNING *",
+            [hashedNewPassword, email]
+        );
 
+        // Verificar si la contraseña se actualizó correctamente
+        if (result.rowCount === 0) {
+            return res.status(500).json({ message: "No se pudo actualizar la contraseña." });
+        }
+
+        console.log(`✅ Contraseña actualizada en la BD para: ${email}`);
         res.json({ message: "Contraseña cambiada exitosamente. Inicia sesión con tu nueva contraseña." });
 
     } catch (error) {
-        console.error("Error al cambiar la contraseña:", error);
+        console.error("❌ Error al cambiar la contraseña:", error);
         res.status(500).json({ message: "Error en el servidor." });
     }
 });
-
-
-// 🔹 Verifica si la contraseña se actualizó correctamente
-if (result.rowCount === 0) {
-    console.error("❌ ERROR: No se pudo actualizar la contraseña.");
-    return res.status(500).json({ message: "No se pudo actualizar la contraseña." });
-}
-
-console.log(`✅ Contraseña actualizada en la BD para: ${email}`);
-res.json({ message: "Contraseña cambiada exitosamente."
-
- });
