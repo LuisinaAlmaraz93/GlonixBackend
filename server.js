@@ -222,7 +222,9 @@ app._router.stack.forEach((r) => {
 // 🔹 Prueba de envío de correo al iniciar el servidor
 async function testEmail() {
     try {
-        await enviarCorreo("luisina.almaraz.3@gmail.com", "TEST1234");
+        const randomPassword = crypto.randomBytes(8).toString("hex"); // Genera una contraseña aleatoria
+await enviarCorreo("luisina.almaraz.3@gmail.com", randomPassword);
+
         console.log("✅ Prueba de correo enviada");
     } catch (error) {
         console.error("❌ Error en la prueba de correo:", error);
