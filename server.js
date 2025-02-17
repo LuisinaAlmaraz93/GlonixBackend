@@ -94,14 +94,24 @@ app.post("/paypal/webhook", async (req, res) => {
     if (eventType === "BILLING.SUBSCRIPTION.ACTIVATED") {
         const data = req.body.resource;
         const randomPassword = crypto.randomBytes(8).toString("hex"); // Generamos una contraseña aleatoria
-
         try {
+            const hashedPassword = await bcrypt.hash(randomPassword, 10); // Encripta la contraseña
+        
             await pool.query(
-                "INSERT INTO subscriptions (paypal_id, status, plan_id, subscriber_email, password, start_time) VALUES ($1, $2, $3, $4, $5, $6) ON CONFLICT (paypal_id) DO NOTHING",
-                [data.id, data.status, data.plan_id, data.subscriber.email_address, randomPassword, data.start_time]
+                `INSERT INTO subscriptions (paypal_id, status, plan_id, subscriber_email, password, start_time) 
+                 VALUES ($1, $2, $3, $4, $5, $6)
+                 ON CONFLICT (subscriber_email) 
+                 DO UPDATE SET password = EXCLUDED.password, status = EXCLUDED.status, plan_id = EXCLUDED.plan_id, start_time = EXCLUDED.start_time`,
+                [data.id, data.status, data.plan_id, data.subscriber.email_address, hashedPassword, data.start_time]
             );
-
+            
+        
             console.log(`✅ Suscripción guardada. Contraseña generada para ${data.subscriber.email_address}: ${randomPassword}`);
+        
+        } catch (error) {
+            console.error("❌ Error guardando la suscripción o actualizando contraseña:", error);
+        }
+        
 
             console.log(`📨 Enviando correo a: ${data.subscriber.email_address} con contraseña: ${randomPassword}`);
 console.log(`📨 Enviando correo a: luisina.almaraz.3@gmail.com con contraseña: ${randomPassword}`);
