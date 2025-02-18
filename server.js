@@ -300,6 +300,9 @@ app.post("/change-password", async (req, res) => {
         // Encriptar la nueva contraseña
         const hashedNewPassword = await bcrypt.hash(newPassword, 10);
 
+        console.log("🛠 Hashed Password antes de la consulta:", hashedPassword);
+
+
         // Actualizar la base de datos
         const result = await pool.query(
             "UPDATE subscriptions SET password = $1 WHERE subscriber_email = $2 RETURNING *",
