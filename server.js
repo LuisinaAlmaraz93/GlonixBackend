@@ -102,12 +102,13 @@ app.post("/paypal/webhook", async (req, res) => {
             console.log("🔒 Contraseña cifrada:", hashedPassword);
             console.log("📌 ID de PayPal:", data.id);
             console.log("📌 Email:", data.subscriber.email_address);
-    
+            
             // ❗ Verificar si hashedPassword es `null` o `undefined`
-        if (!hashedPassword) {
-            console.error("❌ Error: hashedPassword es nulo o indefinido");
-            return res.status(500).json({ error: "No se pudo generar la contraseña cifrada" });
-        }
+            if (!hashedPassword || typeof hashedPassword !== "string") {
+                console.error("❌ ERROR: hashedPassword es nulo, indefinido o no es un string");
+                return res.status(500).json({ error: "No se pudo generar la contraseña cifrada" });
+            }
+            
             // Guardar en la base de datos
             await pool.query(
                 `INSERT INTO subscriptions (paypal_id, status, plan_id, subscriber_email, password, start_time) 
