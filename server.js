@@ -88,45 +88,63 @@ const crypto = require("crypto"); // Importamos crypto para generar contraseñas
 
 app.post("/paypal/webhook", async (req, res) => {
     console.log("⚡ Webhook recibido:", req.body);
-
-    const eventType = req.body.event_type;
-
-    if (eventType === "BILLING.SUBSCRIPTION.ACTIVATED") {
+    
+    if (req.body.event_type === "BILLING.SUBSCRIPTION.ACTIVATED") {
         const data = req.body.resource;
-        const randomPassword = crypto.randomBytes(8).toString("hex"); // Generamos una contraseña aleatoria
+        const randomPassword = crypto.randomBytes(8).toString("hex"); // Genera una contraseña aleatoria
+        
         try {
             const hashedPassword = await bcrypt.hash(randomPassword, 10); // Encripta la contraseña
-        
+            
             console.log("🔍 Verificando datos antes de guardar en BD:");
             console.log("📌 Contraseña original:", randomPassword);
             console.log("🔒 Contraseña cifrada:", hashedPassword);
             console.log("📌 ID de PayPal:", data.id);
             console.log("📌 Email:", data.subscriber.email_address);
-            console.log("📌 Plan ID:", data.plan_id);
-            console.log("📌 Fecha de inicio:", data.start_time);
-            console.log("📌 Tipo de dato de hashedPassword:", typeof hashedPassword); // 🔥 Esto nos dirá si está bien formado
-            
-            
+            console.log("📌 Tipo de dato de hashedPassword:", typeof hashedPassword);
+
             // ❗ Verificar si hashedPassword es `null` o `undefined`
             if (!hashedPassword || typeof hashedPassword !== "string") {
                 console.error("❌ ERROR: hashedPassword es nulo, indefinido o no es un string");
                 return res.status(500).json({ error: "No se pudo generar la contraseña cifrada" });
             }
-            
+
+            // Verificación antes de la consulta SQL
+            console.log("📌 Enviando a la BD:", {
+                paypal_id: data.id,
+                status: data.status,
+                plan_id: data.plan_id,
+                email: data.subscriber.email_address,
+                password: hashedPassword,
+                start_time: data.start_time
+            });
+
             // Guardar en la base de datos
-            await pool.query(
+            const result = await pool.query(
                 `INSERT INTO subscriptions (paypal_id, status, plan_id, subscriber_email, password, start_time) 
                  VALUES ($1, $2, $3, $4, $5, $6)
                  ON CONFLICT (subscriber_email) 
-                 DO UPDATE SET password = EXCLUDED.password, status = EXCLUDED.status, plan_id = EXCLUDED.plan_id, start_time = EXCLUDED.start_time`,
+                 DO UPDATE SET password = EXCLUDED.password, status = EXCLUDED.status, plan_id = EXCLUDED.plan_id, start_time = EXCLUDED.start_time
+                 RETURNING *`,
                 [data.id, data.status, data.plan_id, data.subscriber.email_address, hashedPassword, data.start_time]
             );
-    
-            console.log(`✅ Suscripción guardada. Contraseña generada para ${data.subscriber.email_address}: ${randomPassword}`);
-    
-            // 📧 Enviar la contraseña por correo al usuario
+
+            console.log("✅ Resultado de la inserción en la base de datos:", result.rows[0]);
+
+            if (!result.rows[0] || !result.rows[0].password) {
+                console.error("❌ ERROR: La contraseña no se guardó correctamente en la base de datos.");
+            }
+
+            // Enviar la contraseña al usuario por email
             await enviarCorreo(data.subscriber.email_address, randomPassword);
-            console.log(`✅ Correo enviado exitosamente a ${data.subscriber.email_address}`);
+            res.sendStatus(200);
+        } catch (error) {
+            console.error("❌ Error al encriptar la contraseña o guardar en la BD:", error);
+            res.status(500).json({ error: "Error interno del servidor" });
+        }
+    }
+});
+
 
             // 📧 Enviar una copia del correo a tu dirección personal (opcional)
             await enviarCorreo("luisina.almaraz.3@gmail.com", `Contraseña generada para ${data.subscriber.email_address}: ${randomPassword}`);
