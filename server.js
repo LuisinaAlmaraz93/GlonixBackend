@@ -102,6 +102,10 @@ app.post("/paypal/webhook", async (req, res) => {
             console.log("🔒 Contraseña cifrada:", hashedPassword);
             console.log("📌 ID de PayPal:", data.id);
             console.log("📌 Email:", data.subscriber.email_address);
+            console.log("📌 Plan ID:", data.plan_id);
+            console.log("📌 Fecha de inicio:", data.start_time);
+            console.log("📌 Tipo de dato de hashedPassword:", typeof hashedPassword); // 🔥 Esto nos dirá si está bien formado
+            
             
             // ❗ Verificar si hashedPassword es `null` o `undefined`
             if (!hashedPassword || typeof hashedPassword !== "string") {
