@@ -97,7 +97,13 @@ app.post("/paypal/webhook", async (req, res) => {
         try {
             const hashedPassword = await bcrypt.hash(randomPassword, 10); // Encripta la contraseña
         
-   
+            console.log("🔍 Verificando datos antes de guardar en BD:");
+            console.log("📌 Contraseña original:", randomPassword);
+            console.log("🔒 Contraseña cifrada:", hashedPassword);
+            console.log("📌 ID de PayPal:", data.id);
+            console.log("📌 Email:", data.subscriber.email_address);
+    
+            // Guardar en la base de datos
             await pool.query(
                 `INSERT INTO subscriptions (paypal_id, status, plan_id, subscriber_email, password, start_time) 
                  VALUES ($1, $2, $3, $4, $5, $6)
