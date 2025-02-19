@@ -8,14 +8,23 @@ const bcrypt = require("bcrypt");
 const app = express();
 app.use(bodyParser.json());
 
-// 🔹 Configurar CORS con opciones específicas
+// 🔹 Configurar CORS para permitir cualquier origen
 const corsOptions = {
-    origin: ["http://127.0.0.1:5500", "http://localhost:3000", "https://glonixbackend.onrender.com"], // Permitir estos dominios
+    origin: "*", // Permitir cualquier origen temporalmente
     methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
+    allowedHeaders: ["Content-Type", "Authorization"],
     credentials: true,
     optionsSuccessStatus: 204
 };
 app.use(cors(corsOptions));
+
+// Middleware para forzar CORS en todas las respuestas
+app.use((req, res, next) => {
+    res.header("Access-Control-Allow-Origin", "*");
+    res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+    res.header("Access-Control-Allow-Headers", "Content-Type, Authorization");
+    next();
+});
 
 // Envío de correos con contraseñas a suscriptores
 
