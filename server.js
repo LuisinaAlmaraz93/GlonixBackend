@@ -21,20 +21,29 @@ const corsOptions = {
 };
 
 // Agrega CORS antes de las rutas
-app.use(cors(corsOptions));
 
+const cors = require("cors");
 
-// Middleware extra para evitar bloqueos CORS
+app.use(cors({
+    origin: "*",  // ⚠️ Permite cualquier origen temporalmente
+    methods: "GET, POST, PUT, DELETE, OPTIONS",
+    allowedHeaders: ["Content-Type", "Authorization"],
+    credentials: true
+}));
+
+// Middleware extra para CORS (si es necesario)
 app.use((req, res, next) => {
-    res.header("Access-Control-Allow-Origin", req.headers.origin || "*");
-    res.header("Access-Control-Allow-Methods", "GET,POST,PUT,DELETE,OPTIONS");
+    res.header("Access-Control-Allow-Origin", "*"); // ⚠️ Permitir cualquier dominio (cambiar en producción)
+    res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
     res.header("Access-Control-Allow-Headers", "Content-Type, Authorization");
     res.header("Access-Control-Allow-Credentials", "true");
+
     if (req.method === "OPTIONS") {
         return res.sendStatus(204);
     }
     next();
 });
+
 
 
 // Envío de correos con contraseñas a suscriptores
