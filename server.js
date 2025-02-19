@@ -10,19 +10,22 @@ const app = express();
 app.use(bodyParser.json());
 
 // 🔹 Configurar CORS correctamente
+const cors = require("cors");
+
 const corsOptions = {
-    origin: "*", // Prueba con esto primero, pero después restringe a dominios específicos
-    methods: "GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS",
+    origin: ["http://127.0.0.1:5500", "https://glonixia-frontend.onrender.com"], // Permitir tu frontend local y en Render
+    methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
     allowedHeaders: ["Content-Type", "Authorization"],
-    credentials: true,
-    optionsSuccessStatus: 204
+    credentials: true
 };
+
+// Aplicar CORS antes de las rutas
 app.use(cors(corsOptions));
 
-// Middleware para asegurar que las respuestas incluyan CORS
+// Middleware extra para asegurar que todas las respuestas tengan CORS
 app.use((req, res, next) => {
-    res.header("Access-Control-Allow-Origin", "*");
-    res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+    res.header("Access-Control-Allow-Origin", req.headers.origin || "*");
+    res.header("Access-Control-Allow-Methods", "GET,POST,PUT,DELETE,OPTIONS");
     res.header("Access-Control-Allow-Headers", "Content-Type, Authorization");
     res.header("Access-Control-Allow-Credentials", "true");
     if (req.method === "OPTIONS") {
@@ -30,6 +33,7 @@ app.use((req, res, next) => {
     }
     next();
 });
+
 
 // 📌 **CONFIGURAR ARCHIVOS ESTÁTICOS**
 app.use(express.static(path.join(__dirname, "Glonix")));
