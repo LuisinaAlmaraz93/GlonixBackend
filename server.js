@@ -307,6 +307,17 @@ await enviarCorreo("luisina.almaraz.3@gmail.com", randomPassword);
 testEmail(); // 🔹 Llamamos la función al iniciar el servidor
 
 
+
+// 🔍 Diagnóstico: Ver todas las rutas registradas en Express
+console.log("📌 Listado de rutas activas:");
+app._router.stack.forEach((r) => {
+    if (r.route && r.route.path) {
+        console.log(`🛠 Ruta activa: ${r.route.path}`);
+    }
+});
+
+
+
 // Iniciar el servidor en el puerto 8080 (Render usa este puerto)
 const PORT = process.env.PORT || 8080;
 app.listen(PORT, "0.0.0.0", () => {
