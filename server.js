@@ -10,29 +10,44 @@ const app = express();
 app.use(bodyParser.json());
 
 // 🔹 Configurar CORS correctamente
+
 const cors = require("cors");
 
 const corsOptions = {
-    origin: ["http://127.0.0.1:5500", "https://glonixia-frontend.onrender.com"], // Permitir tu frontend local y en Render
+    origin: function (origin, callback) {
+        const allowedOrigins = [
+            "http://127.0.0.1:5500",
+            "https://glonixia-frontend.onrender.com"
+        ];
+
+        // Permitir solo si el origin está en la lista o si es undefined (uso local)
+        if (!origin || allowedOrigins.includes(origin)) {
+            callback(null, true);
+        } else {
+            callback(new Error("CORS not allowed"));
+        }
+    },
     methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
     allowedHeaders: ["Content-Type", "Authorization"],
     credentials: true
 };
 
-// Aplicar CORS antes de las rutas
+// Aplica CORS antes de definir rutas
 app.use(cors(corsOptions));
 
-// Middleware extra para asegurar que todas las respuestas tengan CORS
+// Middleware extra para seguridad CORS
 app.use((req, res, next) => {
     res.header("Access-Control-Allow-Origin", req.headers.origin || "*");
-    res.header("Access-Control-Allow-Methods", "GET,POST,PUT,DELETE,OPTIONS");
+    res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
     res.header("Access-Control-Allow-Headers", "Content-Type, Authorization");
     res.header("Access-Control-Allow-Credentials", "true");
+
     if (req.method === "OPTIONS") {
         return res.sendStatus(204);
     }
     next();
 });
+
 
 
 // 📌 **CONFIGURAR ARCHIVOS ESTÁTICOS**
