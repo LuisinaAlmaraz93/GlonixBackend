@@ -8,34 +8,29 @@ const bcrypt = require("bcrypt");
 const app = express();
 app.use(bodyParser.json());
 
-// 🔹 Configurar CORS con dominios específicos permitidos
-const allowedOrigins = ["http://127.0.0.1:5500", "http://localhost:3000", "https://glonixbackend.onrender.com"];
+// 🔹 Configurar CORS de manera más permisiva temporalmente
 const corsOptions = {
-    origin: function (origin, callback) {
-        if (!origin || allowedOrigins.includes(origin)) {
-            callback(null, true);
-        } else {
-            callback(new Error("Acceso no permitido por CORS"));
-        }
-    },
-    methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
+    origin: "*", // Permitir cualquier origen temporalmente
+    methods: "GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS",
     allowedHeaders: ["Content-Type", "Authorization"],
     credentials: true,
     optionsSuccessStatus: 204
 };
 app.use(cors(corsOptions));
+app.options("*", cors(corsOptions)); // Responder a preflight requests correctamente
 
 // Middleware para forzar CORS en todas las respuestas
 app.use((req, res, next) => {
-    const origin = req.headers.origin;
-    if (allowedOrigins.includes(origin)) {
-        res.header("Access-Control-Allow-Origin", origin);
-    }
+    res.header("Access-Control-Allow-Origin", "*");
     res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
     res.header("Access-Control-Allow-Headers", "Content-Type, Authorization");
     res.header("Access-Control-Allow-Credentials", "true");
+    if (req.method === "OPTIONS") {
+        return res.sendStatus(204);
+    }
     next();
 });
+
 
 // Envío de correos con contraseñas a suscriptores
 
