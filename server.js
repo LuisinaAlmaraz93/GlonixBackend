@@ -81,12 +81,18 @@ const enviarCorreo = async (email, password) => {
 };
 
 
+const path = require("path");
 
-
-// Ruta de prueba para verificar que el servidor funciona
+// Ruta para servir la página de inicio (suscribe.html)
 app.get("/", (req, res) => {
+    res.sendFile(path.join(__dirname, "public", "suscribe.html"));
+});
+
+// Ruta de prueba para ver si el servidor sigue funcionando
+app.get("/test", (req, res) => {
     res.send("✅ El servidor está funcionando correctamente.");
 });
+
 
 // Crear la tabla si no existe
 async function createTable() {
