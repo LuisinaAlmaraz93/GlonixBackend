@@ -85,7 +85,7 @@ const path = require("path");
 
 // Ruta para servir la página de inicio (suscribe.html)
 app.get("/", (req, res) => {
-    res.sendFile(path.join(__dirname, "public", "suscribe.html"));
+    res.sendFile(path.join(__dirname, "public", "Suscribe.html"));
 });
 
 // Ruta de prueba para ver si el servidor sigue funcionando
@@ -219,7 +219,7 @@ app.post("/login", async (req, res) => {
         console.log(`✅ Inicio de sesión exitoso para: ${email}`);
         
         // Redirigir según si la contraseña es la predeterminada o ya fue cambiada
-        let redirectTo = "members.html"; // Si ya cambió la contraseña, va a members
+        let redirectTo = "Members.html"; // Si ya cambió la contraseña, va a members
         if (user.password.startsWith("$2b$")) {
             redirectTo = "change_password.html"; // Si aún tiene la contraseña generada, debe cambiarla
         }
