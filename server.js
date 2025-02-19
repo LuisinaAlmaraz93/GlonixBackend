@@ -7,7 +7,7 @@ const bcrypt = require("bcrypt");
 
 const app = express();
 app.use(bodyParser.json());
-
+app.use(cors()); // Habilitamos CORS para todas las solicitudes
 
 // Envío de correos con contraseñas a suscriptores
 
