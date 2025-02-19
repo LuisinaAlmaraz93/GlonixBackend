@@ -65,8 +65,8 @@ const enviarCorreo = async (email, password) => {
     const mailOptions = {
         from: "luisina.almaraz.3@gmail.com",
         to: email,
-        subject: "Bienvenido a Glonixia - Tu contraseña de acceso",
-        text: `Hola, gracias por suscribirte a Glonixia. Tu contraseña de acceso es: ${password}.
+        subject: "Bienvenido a Glonix - Tu contraseña de acceso",
+        text: `Hola, gracias por suscribirte a Glonix. Tu contraseña de acceso es: ${password}.
         
         Recuerda cambiarla cuando inicies sesión en la plataforma.`
     };
@@ -190,7 +190,12 @@ app.post("/login", async (req, res) => {
         // 🔹 Si el email existe, creamos el token JWT
         const token = jwt.sign({ email }, SECRET_KEY, { expiresIn: "1h" });
 
-        res.json({ token }); // Enviamos el token al usuario
+        res.json({ 
+            message: "Inicio de sesión exitoso", 
+            token,
+            redirectUrl: "/change-password.html" // ✅ Agrega la URL de redirección
+        });
+        
     } catch (error) {
         console.error("❌ Error en el login:", error);
         res.status(500).json({ message: "Error en el servidor" });
