@@ -176,35 +176,55 @@ app.post("/paypal/webhook", async (req, res) => {
 
 
 app.post("/login", async (req, res) => {
-    const { email, password } = req.body; // Recibe email y contraseña
+    const { email, password } = req.body;
+
+    console.log(`🔍 Intentando iniciar sesión con: ${email}`);
 
     try {
-        // Buscar al usuario en la base de datos
-        let result = await pool.query("SELECT * FROM subscriptions WHERE subscriber_email = $1", [email]);
+        // Buscar usuario en la base de datos
+        const result = await pool.query("SELECT * FROM subscriptions WHERE subscriber_email = $1", [email]);
 
         if (result.rows.length === 0) {
-            return res.status(401).json({ message: "Usuario no encontrado." });
+            console.log(`❌ Usuario no encontrado: ${email}`);
+            return res.status(404).json({ message: "El usuario no está registrado." });
         }
 
         const user = result.rows[0];
 
-        // Verificar si la contraseña ingresada es correcta usando bcrypt
-        const passwordMatch = await bcrypt.compare(password, user.password);
+        if (!user.password) {
+            console.log(`❌ Error: Usuario ${email} no tiene contraseña almacenada.`);
+            return res.status(500).json({ message: "Error del servidor. Contacta soporte." });
+        }
 
+        console.log(`🔍 Comparando contraseña ingresada con la almacenada en BD para ${email}`);
+        
+        // Comparar contraseña con bcrypt
+        const passwordMatch = await bcrypt.compare(password, user.password);
+        
         if (!passwordMatch) {
+            console.log(`❌ Contraseña incorrecta para el usuario ${email}`);
             return res.status(401).json({ message: "Contraseña incorrecta." });
         }
 
-        // Generar token JWT para autenticación
+        // ✅ Generar token JWT
         const token = jwt.sign({ email: user.subscriber_email }, SECRET_KEY, { expiresIn: "1h" });
 
-        res.json({ token, redirectTo: "change_password.html" });
+        console.log(`✅ Inicio de sesión exitoso para: ${email}`);
+        
+        // Redirigir según si la contraseña es la predeterminada o ya fue cambiada
+        let redirectTo = "members.html"; // Si ya cambió la contraseña, va a members
+        if (user.password.startsWith("$2b$")) {
+            redirectTo = "change_password.html"; // Si aún tiene la contraseña generada, debe cambiarla
+        }
+
+        res.json({ message: "Inicio de sesión exitoso", token, redirectTo });
 
     } catch (error) {
         console.error("❌ Error en el login:", error);
-        res.status(500).json({ message: "Error en el servidor" });
+        res.status(500).json({ message: "Error en el servidor." });
     }
 });
+
 
 // ✅ **Ruta para que los usuarios configuren su contraseña**
 
