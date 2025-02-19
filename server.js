@@ -22,14 +22,17 @@ const corsOptions = {
 
 // Agrega CORS antes de las rutas
 
-const cors = require("cors");
+cconst cors = require("cors");
 
-app.use(cors({
-    origin: "*",  // ⚠️ Permite cualquier origen temporalmente
+const corsOptions = {
+    origin: ["http://127.0.0.1:5500", "https://glonixia-frontend.onrender.com"], // Permitir localhost y el dominio en Render
     methods: "GET, POST, PUT, DELETE, OPTIONS",
     allowedHeaders: ["Content-Type", "Authorization"],
     credentials: true
-}));
+};
+
+app.use(cors(corsOptions));
+
 
 // Middleware extra para CORS (si es necesario)
 app.use((req, res, next) => {
