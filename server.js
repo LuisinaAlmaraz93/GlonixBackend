@@ -175,27 +175,31 @@ app.post("/paypal/webhook", async (req, res) => {
 
 
 
-// ✅ **Ruta para generar el token JWT**
 app.post("/login", async (req, res) => {
-    const { email } = req.body; // Recibe el email desde el frontend
+    const { email, password } = req.body; // Recibe email y contraseña
 
     try {
-        // Verificar si el email existe en la base de datos
+        // Buscar al usuario en la base de datos
         let result = await pool.query("SELECT * FROM subscriptions WHERE subscriber_email = $1", [email]);
 
         if (result.rows.length === 0) {
-            return res.status(401).json({ message: "Acceso denegado: No estás suscripto." });
+            return res.status(401).json({ message: "Usuario no encontrado." });
         }
 
-        // 🔹 Si el email existe, creamos el token JWT
-        const token = jwt.sign({ email }, SECRET_KEY, { expiresIn: "1h" });
+        const user = result.rows[0];
 
-        res.json({ 
-            message: "Inicio de sesión exitoso", 
-            token,
-            redirectUrl: "/change-password.html" // ✅ Agrega la URL de redirección
-        });
-        
+        // Verificar si la contraseña ingresada es correcta usando bcrypt
+        const passwordMatch = await bcrypt.compare(password, user.password);
+
+        if (!passwordMatch) {
+            return res.status(401).json({ message: "Contraseña incorrecta." });
+        }
+
+        // Generar token JWT para autenticación
+        const token = jwt.sign({ email: user.subscriber_email }, SECRET_KEY, { expiresIn: "1h" });
+
+        res.json({ token, redirectTo: "change_password.html" });
+
     } catch (error) {
         console.error("❌ Error en el login:", error);
         res.status(500).json({ message: "Error en el servidor" });
@@ -328,7 +332,6 @@ app.post("/change-password", async (req, res) => {
         return res.status(403).json({ message: "No tienes permiso para cambiar la contraseña." });
     }
 
-    // Validar que las contraseñas coincidan
     if (newPassword !== confirmPassword) {
         return res.status(400).json({ message: "Las contraseñas no coinciden." });
     }
@@ -337,39 +340,32 @@ app.post("/change-password", async (req, res) => {
         const decoded = jwt.verify(token, SECRET_KEY);
         const email = decoded.email;
 
-        // Verificar si el usuario ya cambió la contraseña antes
+        // Verificar si el usuario existe en la base de datos
         const userCheck = await pool.query("SELECT password FROM subscriptions WHERE subscriber_email = $1", [email]);
 
         if (userCheck.rows.length === 0) {
             return res.status(404).json({ message: "Usuario no encontrado." });
         }
 
-        const currentPassword = userCheck.rows[0].password;
-
-        // Si el usuario ya cambió la contraseña antes (es decir, la contraseña está encriptada)
-        if (currentPassword.startsWith("$2b$")) { 
-            return res.status(403).json({ message: "Ya cambiaste tu contraseña antes." });
-        }
-
         // Encriptar la nueva contraseña
         const hashedNewPassword = await bcrypt.hash(newPassword, 10);
 
-        console.log("🛠 Hashed Password antes de la consulta:", hashedPassword);
+        console.log(`🛠 Nueva contraseña encriptada para ${email}:`, hashedNewPassword);
 
-
-        // Actualizar la base de datos
+        // Actualizar la base de datos con la nueva contraseña
         const result = await pool.query(
             "UPDATE subscriptions SET password = $1 WHERE subscriber_email = $2 RETURNING *",
             [hashedNewPassword, email]
         );
 
-        // Verificar si la contraseña se actualizó correctamente
         if (result.rowCount === 0) {
             return res.status(500).json({ message: "No se pudo actualizar la contraseña." });
         }
 
         console.log(`✅ Contraseña actualizada en la BD para: ${email}`);
-        res.json({ message: "Contraseña cambiada exitosamente. Inicia sesión con tu nueva contraseña." });
+
+        // ✅ Responder con un mensaje de éxito y redirigir al login
+        res.json({ message: "Contraseña cambiada exitosamente. Inicia sesión con tu nueva contraseña.", redirectTo: "suscribe.html" });
 
     } catch (error) {
         console.error("❌ Error al cambiar la contraseña:", error);
