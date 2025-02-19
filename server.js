@@ -118,7 +118,11 @@ app.post("/paypal/webhook", async (req, res) => {
                 `INSERT INTO subscriptions (paypal_id, status, plan_id, subscriber_email, password, start_time) 
                  VALUES ($1, $2, $3, $4, $5, $6)
                  ON CONFLICT (subscriber_email) 
-                 DO UPDATE SET password = $5, status = $2, plan_id = $3, start_time = $6
+                  DO UPDATE SET 
+                    password = COALESCE(EXCLUDED.password, subscriptions.password),
+                    status = EXCLUDED.status, 
+                    plan_id = EXCLUDED.plan_id, 
+                    start_time = EXCLUDED.start_time
                  RETURNING *`,
                 [data.id, data.status, data.plan_id, data.subscriber.email_address, hashedPassword, data.start_time]
             );
