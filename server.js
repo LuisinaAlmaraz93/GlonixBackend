@@ -7,7 +7,15 @@ const bcrypt = require("bcrypt");
 
 const app = express();
 app.use(bodyParser.json());
-app.use(cors()); // Habilitamos CORS para todas las solicitudes
+
+// 🔹 Configurar CORS con opciones específicas
+const corsOptions = {
+    origin: ["http://127.0.0.1:5500", "http://localhost:3000", "https://glonixbackend.onrender.com"], // Permitir estos dominios
+    methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
+    credentials: true,
+    optionsSuccessStatus: 204
+};
+app.use(cors(corsOptions));
 
 // Envío de correos con contraseñas a suscriptores
 
