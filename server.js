@@ -85,7 +85,7 @@ const path = require("path");
 
 // Ruta para servir la página de inicio (suscribe.html)
 app.get("/", (req, res) => {
-    res.sendFile(path.join(__dirname, "public", "Suscribe.html"));
+    res.sendFile(path.join(__dirname, "Glonix", "Suscribe.html"));
 });
 
 // Ruta de prueba para ver si el servidor sigue funcionando
