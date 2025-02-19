@@ -8,17 +8,21 @@ const bcrypt = require("bcrypt");
 const app = express();
 app.use(bodyParser.json());
 
-// 🔹 Configurar CORS de manera más permisiva temporalmente
-const cors = require("cors"); 
+// 🔹 Configurar CORS de manera más permisiva temporalmente 
+
+const cors = require("cors");
 
 const corsOptions = {
-    origin: ["http://127.0.0.1:5500", "https://glonixbackend.onrender.com"], // ✅ Asegura que tu frontend pueda acceder
-    methods: "GET,POST,PUT,DELETE,OPTIONS",
+    origin: "*", // 🔥 Esto permite cualquier origen (prueba con esto primero)
+    methods: "GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS",
     allowedHeaders: ["Content-Type", "Authorization"],
-    credentials: true
+    credentials: true,
+    optionsSuccessStatus: 204
 };
 
+// Agrega CORS antes de las rutas
 app.use(cors(corsOptions));
+
 
 // Middleware extra para evitar bloqueos CORS
 app.use((req, res, next) => {
